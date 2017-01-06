@@ -18,6 +18,8 @@ def validateKeySize(keySize, key):
         return -2
     if not (int(keySize[0]) * int(keySize[1]) == len(key)):  # in case the key contains non alphabetic characters
         return -3
+    if (int(keySize[0]) < 2) or (int(keySize[1]) < 2):  # in case the key contains non alphabetic characters
+        return -4
     return 1
 
 
@@ -28,7 +30,10 @@ while 1:  # key validity while loop
 
     # Stage 1: Validate Key size.
     # --get key size from user
-    print("Please enter the key size.\n--Note: enter the coordinates in the format of 'N,M'\nKey size: ", end="")
+    print("Please enter the key size.\n"
+          "--Note: enter the coordinates in the format of 'N,M'\n"
+          "--Note: both numbers must be greater or equal to 2\n"
+          "Key size: ", end="")
     keySize = sys.stdin.readline()
     keySize = keySize.rstrip('\n')
     keySize = keySize.replace(' ', '')
@@ -66,7 +71,19 @@ while 1:  # key validity while loop
             exit(0)
         else:
             continue
+    elif (validKey == -4):
+        print("\nThe given key size is too small, note that both numbers must be greater or equal to 2. "
+              "Please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
     else:
         break
 # end of key validity while loop
 
+#hello zahra2
