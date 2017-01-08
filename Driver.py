@@ -2,7 +2,6 @@ import sys
 import random
 import os
 import numpy as np
-
 characters = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6, 'H': 7, 'I': 8, 'J': 9, 'K': 10, 'L': 11, 'M': 12,
               'N': 13, 'O': 14, 'P': 15, 'Q': 16, 'R': 17, 'S': 18, 'T': 19, 'U': 20, 'V': 21, 'W': 22, 'X': 23,
               'Y': 24, 'Z': 25, 'a': 26, 'b': 27, 'c': 28, 'd': 29, 'e': 30, 'f': 31, 'g': 32, 'h': 33, 'i': 34,
@@ -20,7 +19,7 @@ def readFile(fileName):
     return string
 
 
-# returns 1 if valid -1,-2,-3,-4 if not(each error returns a different number)
+# returns 1 if valid -1,-2,-3,-4,-5 if not(each error returns a different number)
 def validateKeySize(keySize, key):
     if (keySize[0].isdigit() == 0) or (
                 keySize[1].isdigit() == 0):  # in case the key size contains non numeric characters
@@ -43,12 +42,11 @@ def validateBlockSize(blockSize, plainText):
         return -2
     if int(blockSize[1]) < 2:  # in case the key rows or columns are less than 2
         return -1
-    temp = plainText.replace(' ', '')
-    temp = temp.replace('\n', '')
+    temp = plainText.replace('\n', '')
     if temp.isalpha() == 0:  # in case the message contains non alphabetic characters
         return -3
     if (len(temp) % (
-        int(blockSize[0]) * int(blockSize[1]))) > 0:  # in case the message cannot be cut up into exact blocks
+                int(blockSize[0]) * int(blockSize[1]))) > 0:  # in case the message cannot be cut up into exact blocks
         return -4
     return 1
 
@@ -120,6 +118,22 @@ def getEncryptedText(text, key, B, N, M):
 # t=getEncryptedText(text,key,3,2,2)
 # print t
 
+def splitIntoBlocks(plainText, M, B):
+    length = M * B
+    index = 0
+    blocks = []
+    string = plainText.replace('\n', '')
+    string += "$"
+    while string[index] != "$":
+        blocks.append(string[index:(index + length)])
+        index += length
+    return blocks
+
+
+# plainText = "i love python\nyeah yo"
+# MxB = ['2', '2']
+# blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
+# print(blocks)
 
 while 1:  # key validity while loop
     # read content of (key.txt)
@@ -206,7 +220,6 @@ while 1:  # block validity while loop
           "Block size: ")
     blockSize = sys.stdin.readline()
     blockSize = blockSize.rstrip('\n')
-    blockSize = blockSize.replace(' ', '')
     MxB = [NxM[1], blockSize]
     # --check if the desired block size is valid
     validBlock = validateBlockSize(MxB, plainText)
@@ -256,3 +269,6 @@ while 1:  # block validity while loop
     else:
         break
 # end of block validity while loop
+
+blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
+originalText = plainText.split("\n")  # used later as a referance for where to add the new lines
