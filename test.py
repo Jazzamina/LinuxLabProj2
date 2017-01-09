@@ -21,6 +21,13 @@ def readFile(fileName):
     return string
 
 
+# prints text to file
+def printToFile(output, fileName):
+    fo = open(fileName, "w")
+    fo.write(output)
+    fo.close()
+
+
 # returns 1 if valid -1,-2,-3,-4,-5 if not(each error returns a different number)
 def validateKeySize(keySize, key):
     if (keySize[0].isdigit() == 0) or (
@@ -85,7 +92,7 @@ def Encrypt(message, key):
     key = key.astype(np.float)
     message = message.astype(np.float)
     cy = np.dot(key, message)
-    cy %= 52
+    cy %= 53
     return cy
 
 
@@ -119,12 +126,6 @@ def getEncryptedText(text, key, B, N, M):
 # key =   "Hias"
 # t=getEncryptedText(text,key,3,2,2)
 # print t
-# prints text to file
-def printToFile(output, fileName):
-    fo = open(fileName, "w")
-    fo.write(output)
-    fo.close()
-
 
 def splitIntoBlocks(text, M, B):
     length = M * B
@@ -138,12 +139,217 @@ def splitIntoBlocks(text, M, B):
     return blocks
 
 
-plainText = "i love python\nyeah yo"
-MxB = ['2', '2']
-NxM = ['2', '2']
-key = "pyth"
-# blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))  # print(blocks)
+def extended_gcd(aa, bb):
+    lastremainder, remainder = abs(aa), abs(bb)
+    x, lastx, y, lasty = 0, 1, 1, 0
+    while remainder:
+        lastremainder, (quotient, remainder) = remainder, divmod(lastremainder, remainder)
+        x, lastx = lastx - quotient * x, x
+        y, lasty = lasty - quotient * y, y
+    return lastremainder, lastx * (-1 if aa < 0 else 1), lasty * (-1 if bb < 0 else 1)
 
+
+def modinv(a, m):
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        raise ValueError
+    return x % m
+
+
+def Decrypt(message, key):
+    key = np.mat(key)
+    message = np.mat(message)
+    key = key.astype(np.float)
+    det = np.linalg.det(key)
+    key = np.linalg.inv(key)
+    key = key * det
+    det = round(det)
+    det = modinv(det, 53)
+    det = int(det)
+    key *= det
+    key %= 53
+    key = np.rint(key)
+    key = key.astype(int)
+    message = np.rint(message)
+    message = message.astype(int)
+    cy = np.dot(key, message)
+    cy %= 53
+    return cy
+
+
+# return the overall decrypted text
+# N & M are the key size
+# M & B are the block size
+
+# key is a string  and text is a string
+def getDecryptedText(text, key, B, N, M):
+    key = list(key)
+    text = list(text)
+    text = turnChar(text)
+    key = turnChar(key)
+
+    text = np.array(text)
+    key = np.array(key)
+
+    text = text.reshape(M, B)
+    key = key.reshape(N, M)
+    decryptedText = Decrypt(text, key)
+    decryptedText = getCypher(decryptedText)
+    return decryptedText
+
+
+# text = "SECU"
+# key = "RNDO"
+# t = getEncryptedText(text, key, 2, 2, 2)
+# print t
+# t = getDecryptedText(t, key, 2, 2, 2)
+# print t
+
+
+# plainText = "i love python\nyeah yo"
+# MxB = ['2', '2']
+# blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
+# print(blocks)
+'''
+while 1:  # key validity while loop
+    # read content of (key.txt)
+    key = readFile("key.txt")
+
+    # Stage 1: Validate Key Size.
+    # --get key size from user
+    print("Please enter the key size.\n"
+          "--Note: enter the coordinates in the format of 'N,M'\n"
+          "--Note: both numbers must be greater or equal to 2\n"
+          "Key size: ")
+    keySize = sys.stdin.readline()
+    keySize = keySize.rstrip('\n')
+    keySize = keySize.replace(' ', '')
+    NxM = keySize.split(",")
+    # --check if the key and the size given are valid
+    validKey = validateKeySize(NxM, key)
+    if validKey == -1:
+        print("\nThe given key in 'key.txt' file contains an odd number of characters, "
+              "please make the necessary changes and try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validKey == -2:
+        print("\nThe given key in 'key.txt' file contains non-alphabetic characters, "
+              "please make the necessary changes and try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validKey == -3:
+        print("\nThe given key size does not match up with the given key, please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validKey == -4:
+        print("\nThe given key size is too small, note that both numbers must be greater or equal to 2. "
+              "Please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validKey == -5:
+        print("\nThe given key size contains non-numeric characters, please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    else:
+        break
+# end of key validity while loop
+
+while 1:  # block validity while loop
+    # Read content of (message.txt)
+    plainText = readFile("message.txt")
+
+    # Stage 2: Enter Block Size.
+    # --get block size from user
+    print("Please enter the desired number of columns in the blocks.\n"
+          "--Note: the number of rows will be taken from the key"
+          "(the number of columns of the key must equal the number of rows in the block.)\n"
+          "Block size: ")
+    blockSize = sys.stdin.readline()
+    blockSize = blockSize.rstrip('\n')
+    MxB = [NxM[1], blockSize]
+    # --check if the desired block size is valid
+    validBlock = validateBlockSize(MxB, plainText)
+    if validBlock == -1:
+        print("\nThe given block size is too small, note that the number must be greater or equal to 2. "
+              "Please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validBlock == -2:
+        print("\nThe given block size contains non-numeric characters, please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validBlock == -3:
+        print("\nThe given message in 'message.txt' file contains non-alphabetic characters, "
+              "please make the necessary changes and try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    elif validBlock == -4:
+        print("\nThe message cannot be cut up in exact blocks of the size you asked for. "
+              "Please try again.")
+        print("Do you want to try again?(y/n)")
+        ans = sys.stdin.readline()
+        ans = ans.rstrip('\n')
+        ans = ans.replace(' ', '')
+        if ans[0] == 'n':
+            exit(0)
+        else:
+            continue
+    else:
+        break
+# end of block validity while loop
+'''
+plainText = readFile("message.txt")
+key = readFile("key.txt")
+MxB = ['3', '3']
+NxM = ['3', '3']
 # prepare blocks
 blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
 
@@ -156,18 +362,47 @@ block = ""
 for i in range(0, len(blocks)):
     block = blocks[int(i)]
     encryptedText = getEncryptedText(block, key, int(MxB[1]), int(NxM[0]), int(MxB[0]))
-    
-    encryptedBlocks.append(encryptedText)
-    cypherText += str(encryptedBlocks[int(i)])
-print(cypherText)
+    encryptedBlocks.append(encryptedText)  # used for the decryption process
+    # turn the blocks to strings
+    temp = ''.join(encryptedBlocks[int(i)])
+    cypherText += str(temp)
+
 # print cypher text to file
 index = 0
-output = ""
+encoutput = ""
+
 for i in range(0, len(originalText)):
     length = len(originalText[int(i)])
-    output += str(cypherText[index:(index + length)])
-    output += "\n"
+    encoutput += str(cypherText[index:(index + length)])
+    encoutput += "\n"
     index += length
 
-print(output)
-printToFile(output, "cypher.txt")
+# print (encoutput) in "cypher.txt"
+encoutput = encoutput.rstrip('\n')
+printToFile(encoutput, "cypher.txt")
+
+# decrypt the text
+decryptedBlocks = []
+deplainText = ""
+block = ""
+for i in range(0, len(encryptedBlocks)):
+    block = encryptedBlocks[int(i)]
+    decryptedText = getDecryptedText(block, key, int(MxB[1]), int(NxM[0]), int(MxB[0]))
+    decryptedBlocks.append(decryptedText)
+    # turn the blocks to strings
+    temp = ''.join(decryptedBlocks[int(i)])
+    deplainText += str(temp)
+
+# print cypher text to file
+index = 0
+decoutput = ""
+
+for i in range(0, len(originalText)):
+    length = len(originalText[int(i)])
+    decoutput += str(deplainText[index:(index + length)])
+    decoutput += "\n"
+    index += length
+
+# print (encoutput) in "cypher.txt"
+decoutput = decoutput.rstrip('\n')
+printToFile(decoutput, "decrypted.txt")

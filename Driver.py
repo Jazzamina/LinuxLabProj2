@@ -23,7 +23,7 @@ def readFile(fileName):
 
 # prints text to file
 def printToFile(output, fileName):
-    fo = open(fileName, "wb")
+    fo = open(fileName, "w")
     fo.write(output)
     fo.close()
 
@@ -92,7 +92,7 @@ def Encrypt(message, key):
     key = key.astype(np.float)
     message = message.astype(np.float)
     cy = np.dot(key, message)
-    cy %= 52
+    cy %= 53
     return cy
 
 
@@ -139,9 +139,6 @@ def splitIntoBlocks(text, M, B):
     return blocks
 
 
-
-
-
 def extended_gcd(aa, bb):
     lastremainder, remainder = abs(aa), abs(bb)
     x, lastx, y, lasty = 0, 1, 1, 0
@@ -157,8 +154,6 @@ def modinv(a, m):
     if g != 1:
         raise ValueError
     return x % m
-
-
 
 
 def Decrypt(message, key):
@@ -203,12 +198,12 @@ def getDecryptedText(text, key, B, N, M):
     return decryptedText
 
 
-#text = "SECU"
-#key = "RNDO"
-#t = getEncryptedText(text, key, 2, 2, 2)
-#print t
-#t = getDecryptedText(t, key, 2, 2, 2)
-#print t
+# text = "SECU"
+# key = "RNDO"
+# t = getEncryptedText(text, key, 2, 2, 2)
+# print t
+# t = getDecryptedText(t, key, 2, 2, 2)
+# print t
 
 
 # plainText = "i love python\nyeah yo"
@@ -351,26 +346,63 @@ while 1:  # block validity while loop
         break
 # end of block validity while loop
 
+# plainText = readFile("message.txt")
+# key = readFile("key.txt")
+# MxB = ['3', '3']
+# NxM = ['3', '3']
 # prepare blocks
 blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
+
 originalText = plainText.split("\n")  # used later as a reference for where to add the new lines
 
 # encrypt the text
 encryptedBlocks = []
 cypherText = ""
-for i in blocks:
-    block = blocks[i]
-    encryptedBlocks.append(getEncryptedText(block, key, int(MxB[1]), int(NxM[0]), int(MxB[0])))
-    cypherText += encryptedBlocks[i]
+block = ""
+for i in range(0, len(blocks)):
+    block = blocks[int(i)]
+    encryptedText = getEncryptedText(block, key, int(MxB[1]), int(NxM[0]), int(MxB[0]))
+    encryptedBlocks.append(encryptedText)  # used for the decryption process
+    # turn the blocks to strings
+    temp = ''.join(encryptedBlocks[int(i)])
+    cypherText += str(temp)
 
 # print cypher text to file
 index = 0
-output = ""
-for i in originalText:
-    length = len(originalText[i])
-    output += cypherText[index:(index + length)]
-    output += "\n"
+encoutput = ""
+
+for i in range(0, len(originalText)):
+    length = len(originalText[int(i)])
+    encoutput += str(cypherText[index:(index + length)])
+    encoutput += "\n"
     index += length
 
-print(output)
-printToFile(output, "cypher.txt")
+# print (encoutput) in "cypher.txt"
+encoutput = encoutput.rstrip('\n')
+printToFile(encoutput, "cypher.txt")
+
+# decrypt the text
+decryptedBlocks = []
+deplainText = ""
+block = ""
+for i in range(0, len(encryptedBlocks)):
+    block = encryptedBlocks[int(i)]
+    decryptedText = getDecryptedText(block, key, int(MxB[1]), int(NxM[0]), int(MxB[0]))
+    decryptedBlocks.append(decryptedText)
+    # turn the blocks to strings
+    temp = ''.join(decryptedBlocks[int(i)])
+    deplainText += str(temp)
+
+# print cypher text to file
+index = 0
+decoutput = ""
+
+for i in range(0, len(originalText)):
+    length = len(originalText[int(i)])
+    decoutput += str(deplainText[index:(index + length)])
+    decoutput += "\n"
+    index += length
+
+# print (encoutput) in "cypher.txt"
+decoutput = decoutput.rstrip('\n')
+printToFile(decoutput, "decrypted.txt")
