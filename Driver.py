@@ -130,6 +130,78 @@ def splitIntoBlocks(plainText, M, B):
     return blocks
 
 
+
+
+
+def extended_gcd(aa, bb):
+    lastremainder, remainder = abs(aa), abs(bb)
+    x, lastx, y, lasty = 0, 1, 1, 0
+    while remainder:
+        lastremainder, (quotient, remainder) = remainder, divmod(lastremainder, remainder)
+        x, lastx = lastx - quotient * x, x
+        y, lasty = lasty - quotient * y, y
+    return lastremainder, lastx * (-1 if aa < 0 else 1), lasty * (-1 if bb < 0 else 1)
+
+
+def modinv(a, m):
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        raise ValueError
+    return x % m
+
+
+
+
+def Decrypt(message, key):
+    key = np.mat(key)
+    message = np.mat(message)
+    key = key.astype(np.float)
+    det = np.linalg.det(key)
+    key = np.linalg.inv(key)
+    key = key * det
+    det = round(det)
+    det = modinv(det, 53)
+    det = int(det)
+    key *= det
+    key %= 53
+    key = np.rint(key)
+    key = key.astype(int)
+    message = np.rint(message)
+    message = message.astype(int)
+    cy = np.dot(key, message)
+    cy %= 53
+    return cy
+
+
+# return the overall decrypted text
+# N & M are the key size
+# M & B are the block size
+
+# key is a string  and text is a string
+def getDecryptedText(text, key, B, N, M):
+    key = list(key)
+    text = list(text)
+    text = turnChar(text)
+    key = turnChar(key)
+
+    text = np.array(text)
+    key = np.array(key)
+
+    text = text.reshape(M, B)
+    key = key.reshape(N, M)
+    decryptedText = Decrypt(text, key)
+    decryptedText = getCypher(decryptedText)
+    return decryptedText
+
+
+#text = "SECU"
+#key = "RNDO"
+#t = getEncryptedText(text, key, 2, 2, 2)
+#print t
+#t = getDecryptedText(t, key, 2, 2, 2)
+#print t
+
+
 # plainText = "i love python\nyeah yo"
 # MxB = ['2', '2']
 # blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
