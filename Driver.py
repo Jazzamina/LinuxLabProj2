@@ -2,6 +2,7 @@ import sys
 import random
 import os
 import numpy as np
+
 characters = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'G': 6, 'H': 7, 'I': 8, 'J': 9, 'K': 10, 'L': 11, 'M': 12,
               'N': 13, 'O': 14, 'P': 15, 'Q': 16, 'R': 17, 'S': 18, 'T': 19, 'U': 20, 'V': 21, 'W': 22, 'X': 23,
               'Y': 24, 'Z': 25, 'a': 26, 'b': 27, 'c': 28, 'd': 29, 'e': 30, 'f': 31, 'g': 32, 'h': 33, 'i': 34,
@@ -16,7 +17,15 @@ reversedCharacters = characters.__class__(map(reversed, characters.items()))
 def readFile(fileName):
     with open(fileName) as f:
         string = f.read()
+    f.close()
     return string
+
+
+# prints text to file
+def printToFile(output, fileName):
+    fo = open(fileName, "wb")
+    fo.write(output)
+    fo.close()
 
 
 # returns 1 if valid -1,-2,-3,-4,-5 if not(each error returns a different number)
@@ -118,11 +127,11 @@ def getEncryptedText(text, key, B, N, M):
 # t=getEncryptedText(text,key,3,2,2)
 # print t
 
-def splitIntoBlocks(plainText, M, B):
+def splitIntoBlocks(text, M, B):
     length = M * B
     index = 0
     blocks = []
-    string = plainText.replace('\n', '')
+    string = text.replace('\n', '')
     string += "$"
     while string[index] != "$":
         blocks.append(string[index:(index + length)])
@@ -270,5 +279,26 @@ while 1:  # block validity while loop
         break
 # end of block validity while loop
 
+# prepare blocks
 blocks = splitIntoBlocks(plainText, int(MxB[0]), int(MxB[1]))
-originalText = plainText.split("\n")  # used later as a referance for where to add the new lines
+originalText = plainText.split("\n")  # used later as a reference for where to add the new lines
+
+# encrypt the text
+encryptedBlocks = []
+cypherText = ""
+for i in blocks:
+    block = blocks[i]
+    encryptedBlocks.append(getEncryptedText(block, key, int(MxB[1]), int(NxM[0]), int(MxB[0])))
+    cypherText += encryptedBlocks[i]
+
+# print cypher text to file
+index = 0
+output = ""
+for i in originalText:
+    length = len(originalText[i])
+    output += cypherText[index:(index + length)]
+    output += "\n"
+    index += length
+
+print(output)
+printToFile(output, "cypher.txt")
